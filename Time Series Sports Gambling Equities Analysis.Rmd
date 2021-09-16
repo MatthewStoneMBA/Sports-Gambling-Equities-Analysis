@@ -1,0 +1,1174 @@
+---
+title: "Sports Gambling Equity Forecast and Analysis"
+author: "Matthew M. Stone"
+date: "May 2nd, 2021"
+output: 
+  html_document:
+    theme: downcute_theme
+    self_contained: true
+    code_folding: hide
+    thumbnails: false
+    lightbox: true
+  
+---
+
+```{r}
+downcute(
+  fig_width = 8,
+  fig_height = 5,
+  fig_caption = TRUE,
+  lightbox = FALSE,
+  thumbnails = FALSE,
+  gallery = FALSE,
+  toc_depth = 2,
+  embed_fonts = TRUE,
+  use_bookdown = FALSE,
+  pandoc_args = NULL,
+  md_extensions = NULL,
+  mathjax = "rmdformats",
+  highlight = NULL,
+  default_style = c("light", "dark"),
+  downcute_theme = c("default", "chaos"),
+  ...
+)
+```
+
+# Add to headers to have dropdowns {.tabset .tabset-fade .tabset-pills} 
+
+```{r setup, message=FALSE, warning=FALSE}
+library(knitr)
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+## Global options
+options(max.print="75")
+opts_chunk$set(cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+```
+# Packages
+```{r}
+library(tidyverse)
+library(lubridate)
+library(tidyquant)
+library(fpp3)
+library(wesanderson)
+library(distributional)
+library(rmdformats)
+
+
+# Creating Color palette
+cPal <- c("#009E73", "black", "red", "#0072B2", "#D55E00")
+```
+
+
+# Exploratory Data Analysis
+* Variables to consider: 
+  + date 
+  + open 
+  + high 
+  + low
+  + close
+  + volume (volume of shares that are transacted) 
+  + adjusted (adjusted close price of stock)
+  
+## DraftKings
+### Ticker - DKNG
+```{r, cache=TRUE}
+# Pull DraftKings Data
+draftK <- c("DKNG") %>% 
+  tq_get(., from = "2015-01-01") %>%
+  as_tsibble(., 
+             index = date) 
+
+# DraftKings Adjusted close price
+draftK %>% autoplot(adjusted) + 
+  labs(
+    title = "DraftKings Adjusted Price", 
+    y = "Adjusted Stock Price ($)", 
+    x = "Year (1D)", 
+    subtitle = "    ") +  theme_minimal()
+
+# DraftKings Volume 
+draftK %>% 
+  autoplot(volume) + 
+  labs(
+    title = "DraftKings Volume", 
+    y = "Trade Volume", 
+    x = "Year (1D)", 
+    subtitle = "   ") + theme_minimal()
+
+# Most recent day
+draftK %>% 
+  tail(1)
+
+```
+* Takeaways
+  + Volume spikes inbetween 07/20 - 11/20ish
+    
+* Other notes:
+  + Volume = 10,769,200
+
+
+
+## Flutter Entertainment (FanDuel)
+### Ticker - PDYPY
+```{r, cache=TRUE}
+# Pull FanDuel Data
+fanDuel <- c("PDYPY") %>% tq_get(., from = "2018-01-01") %>%
+  as_tsibble(., index = date)
+
+# FanDuel Adjusted close price
+fanDuel %>% autoplot(adjusted, 
+                     color = "#0072B2") + 
+  labs(
+    title = "FanDuel Adjusted Price",
+    y = "Adjusted Stock Price ($)", 
+    x = "Year (1D)", 
+    subtitle = "    ") + theme_minimal()
+
+# DraftKings volume
+fanDuel %>% 
+  autoplot(volume, 
+           color = "#0072B2") + 
+  labs(title = "FanDuel Volume", 
+       y = "Trade Volume", 
+       x = "Year (1D)", 
+       subtitle = "   ") +  theme_minimal()
+
+# Most recent day
+fanDuel %>% 
+  tail(1)
+```
+
+* Notes:
+  + Acquired by Paddy Power Betfair in 2018 (Now known as FLutter Entertainment)
+  + HUGE spikes in volume after 2020
+  + Large jump after covid
+  + V-Shape recovery dipped at the beginning of 2021
+  + Volume = 11,900
+
+## MGM Resorts
+### Ticker - MGM
+```{r cache=TRUE}
+# Pull MGM Data
+MGM <- c("MGM") %>% tq_get(., from = "2018-01-01") %>%
+  as_tsibble(., index = date)
+
+# MGM Adjusted close price
+MGM %>% autoplot(adjusted, 
+                 color = "red") + 
+  labs(title = "MGM Adjusted Price", 
+       y = "Adjusted Stock Price ($)", 
+       x = "Year (1D)", 
+       subtitle = "    ") + theme_minimal()
+
+
+# MGM Volume
+MGM %>% autoplot(volume, 
+                 color = "red") + 
+  labs(title = "MGM Volume", 
+       y = "Trade Volume", 
+       x = "Year (1D)", 
+       subtitle = "   ") + theme_minimal()
+
+# Looking at most recent day
+MGM %>% 
+  tail(1)
+```
+* Notes:
+  + Public since the 70's
+  + Large jump in volume after 2020
+  + Volume = 8,184,000
+
+## Penn National Gaming
+### Ticker - PENN
+```{r}
+# Pull PENN Data
+PENN <- c("PENN") %>% tq_get(., from = "2015-01-01") %>%
+  as_tsibble(., index = date)
+
+# PENN Adjusted close price
+PENN %>% autoplot(adjusted, 
+                  color = "#D55E00") + 
+  labs(title = "PENN Adjusted Price", 
+       y = "Adjusted Stock Price ($)", 
+       x = "Year (1D)", 
+       subtitle = "    ") + theme_minimal()
+
+# PENN Volume
+PENN %>% autoplot(volume, 
+                  color = "#D55E00") + 
+  labs(title = "PENN Volume", 
+       y = "Trade Volume", 
+       x = "Year (1D)", 
+       subtitle = "   ") + theme_minimal()
+
+# Most recent day
+PENN %>% 
+  tail(2)
+```
+
+* Notes:
+  + Otherwise known as Barstool sports
+  + Largest spike since covid, out of all stocks
+  + Dipped in Feb 2021, but recovering
+  + Volume = 3,963,700
+
+
+## Caesars Entertainment
+### Ticker - CZR
+```{r}
+# Pull CZR Data
+CZR <- c("CZR") %>% tq_get(., from = "2018-01-01") %>%
+  as_tsibble(., index = date)
+
+# CZR Adjusted close price
+CZR %>% autoplot(adjusted, 
+                 color = "#009E73") + 
+  labs(title = "CZR Adjusted Price", 
+       y = "Adjusted Stock Price ($)", 
+       x = "Year (1D)", 
+       subtitle = "    ") + theme_minimal()
+
+# CZR Volume
+CZR %>% autoplot(volume, 
+                 color = "#009E73") + 
+  labs(title = "CZR Volume", 
+       y = "Trade Volume", 
+       x = "Year (1D)", 
+       subtitle = "   ") + theme_minimal()
+
+# Most recent day
+CZR %>% 
+  tail(1)
+```
+* Notes:
+  + Odd volume spike very recently
+  + V-shape recovery and then some
+  + Volume = 3,601,800
+
+
+# Tidy Data
+* Combining DraftKings, FanDuel, MGM, PENN, CZR from January 1st, 2018
+  + First pulling the data
+  + Issue with trading days (all starting at different dates), so creating variable PENNdays (Longest stock to pick from)
+  + Filtering all stocks for when they started sports gambling
+  + Joining everything together
+
+```{r}
+# Pull Data
+sportGam <- c("DKNG", 
+              "PDYPY", 
+              "MGM", 
+              "PENN", 
+              "CZR") %>% 
+  tq_get(., from = "2018-01-01") %>%
+  as_tsibble(., index = date, key = symbol)
+
+# Creating Longest day for trading day
+PENNdays <- sportGam %>% 
+  as_tibble() %>%
+  filter(symbol=="PENN" & date > as.Date("2018-05-14")) %>% 
+  mutate(trading_day = row_number()) %>% 
+  select(date, trading_day)
+
+# Filtering stocks to start at different times
+Use.Stocks <- sportGam %>% 
+  as_tibble() %>%  
+  filter(
+    (symbol=="DKNG" & date > as.Date("2019-12-05") | 
+       (symbol=="PDYPY" & date > as.Date("2020-12-01") |
+          (symbol == "MGM" & date > as.Date("2019-09-05")) |
+          (symbol == "PENN" & date > as.Date("2018-05-14")) |
+          (symbol == "CZR" & date > as.Date("2018-09-06"))
+       )))
+
+# Join Use.Stocks & PENNdays
+Model.Me <- Use.Stocks %>% 
+  as_tibble() %>% 
+  left_join(., PENNdays) %>% 
+  as_tsibble(index = trading_day, 
+             key = symbol, 
+             regular = TRUE) 
+
+# Plotting volumes
+Model.Me %>% 
+  autoplot(volume) + 
+  scale_color_manual(values = cPal) + 
+  labs(title = "", 
+       x = "Trading Days", 
+       y = "Volume") + theme_minimal()
+
+```  
+
+
+
+# Train & Test
+* Splitting train and test data sets in order to produce forecasts 2 weeks (14 trading days) out.
+
+```{r}
+# Create Test 
+test <- Model.Me %>% 
+  group_by(symbol) %>%
+  slice_max(trading_day, 
+            n = 14) %>% 
+  ungroup() %>% 
+  as_tsibble(index = trading_day, 
+             key = symbol)
+
+## Checking test
+test
+
+# Anti-join test out of Model.Me 
+train <- anti_join(Model.Me, 
+                   test) %>% 
+  as_tsibble(index = trading_day,
+             key = symbol)
+
+## Checking train
+train
+```
+
+
+# Visualizing Adjusted Prices & Volume
+## Comparing All Adjusted Stock Prices
+```{r}
+# Adjusted Prices
+train %>% 
+  ggplot(aes(trading_day, 
+             adjusted, 
+             color = symbol)) + 
+  geom_line() + 
+  scale_color_manual(values=cPal) +
+  labs(title = 
+         "Comparing Sports Gambling Stocks Adjusted Prices", 
+       y = "Stock Price ($)", 
+       x = "Trading Day") + theme_minimal()
+
+# Logged Adjusted prices
+train %>% 
+  ggplot(aes(trading_day, 
+             log(adjusted), 
+             color = symbol)) + 
+  geom_line() + 
+  scale_color_manual(values=cPal) +
+  labs(title = "Comparing Sports Gambling Stocks", 
+       subtitle =  "Log Adjusted Prices", 
+       y = "Stock Price (Log)", 
+       x = "Trading Day") + theme_minimal()
+```
+
+## Comparing All Trading Volumes
+```{r}
+# Volume
+train %>% 
+  ggplot(aes(trading_day, 
+             volume, 
+             color = symbol)) + 
+  geom_line() + 
+  scale_color_manual(values=cPal) +
+  labs(title = "Comparing Sports Gambling Stocks Trading Volume", 
+       y = "Trade Volume", 
+       x = "Trading Day") + theme_minimal()
+
+
+# Comparing logged volumes
+train %>% 
+  ggplot(aes(trading_day, 
+             log(volume), 
+             color = symbol)) + 
+  geom_line() + 
+  scale_color_manual(values=cPal) +
+  labs(title = "Comparing Sports Gambling Stocks",
+       subtitle = "Logged Volume",
+       y = "Trade Volume (Log)",
+       x = "Trading Day") + theme_minimal()
+```
+
+
+### Comparing all Volumes
+```{r}
+# Facet volume
+train %>% 
+  ggplot(aes(trading_day, 
+             volume, 
+             color = symbol)) + 
+  geom_line(show.legend = F) + 
+  scale_color_manual(values=cPal) +
+  labs(title = "Comparing Sports Gambling Stocks Volumes",
+       y = "Trade Volume", 
+       x = "Trading Day") +
+  facet_wrap(.~symbol,
+             scales = c("free_y")) + theme_minimal()
+
+# Facet logged volume
+train %>% 
+  ggplot(aes(trading_day, 
+             log(volume), 
+             color = symbol)) + 
+  geom_line() + 
+  scale_color_manual(values=cPal) +
+  labs(title = "Comparing Sports Gambling Stocks", 
+       subtitle =  "Logged Volume", 
+       y = "Trade Volume (Log)", 
+       x = "Trading Day") + 
+  facet_wrap(.~symbol, 
+             scales = c("free_y")) + theme_minimal()
+
+
+```
+
+
+
+
+# Decomposition
++ Taking a look at the decompositions of each individual stock.
+
+## Comparing Decompositions  
+```{r}
+# Second Decomposition of adjusted
+dcmpVol <- train %>% 
+  model(stl = STL(volume))
+
+# Looking at Volume components
+dcmpVol %>% 
+  components()
+
+
+# Looking at Decomposition components of Volume 
+dcmpVol %>%
+  components() %>% 
+  autoplot() + 
+  scale_color_manual(values=cPal) + 
+  labs(x = "Trading Day") + theme_minimal()
+
+
+# Second Decomposition of adjusted
+dcmpAdj <- train %>% 
+  model(stl = STL(adjusted))
+
+# Looking at Decomposition components of Adjusted
+dcmpAdj %>% 
+  components()
+
+
+# Visualizing all of the Decompositions
+dcmpAdj %>% 
+  components() %>% 
+  autoplot() + 
+  scale_color_manual(values=cPal) + 
+  labs(x = "Trading Day") + theme_minimal()
+
+```
+
+## CZR Decomposition 
+### CZR Volume Decomposition
+```{r}
+components(dcmpVol) %>% 
+  filter(symbol == "CZR") %>% 
+  autoplot(color = '#009E73') + 
+  labs(title = "STL Decomposition of CZR Volume", 
+       x = "Trading Day") + theme_minimal()
+```
+
+### CZR Adjusted Stock Price Decomposition
+```{r}
+components(dcmpAdj) %>% 
+  filter(symbol == "CZR") %>% 
+  autoplot(color = '#009E73') + 
+  labs(title = "STL Decomposition of CZR Adjusted Price", 
+       x = "Trading Day") + theme_minimal()
+
+```
+
+## PENN Decomposition
+### PENN Volume Decomposition
+```{r}
+components(dcmpVol) %>% 
+  filter(symbol == "PENN") %>% 
+  autoplot(color = '#D55E00') + 
+  labs(title = "STL Decomposition of PENN Volume", 
+       x = "Trading Day") + theme_minimal()
+```
+
+### PENN Adjusted Stock Price Decomposition
+```{r}
+components(dcmpAdj) %>% 
+  filter(symbol == "PENN") %>% 
+  autoplot(color = '#D55E00') + 
+  labs(title = "STL Decomposition of PENN Adjusted Price", 
+       x = "Trading Day") + theme_minimal()
+
+```
+
+## MGM Decomposition
+### MGM Volume Decomposition
+```{r}
+components(dcmpVol) %>% 
+  filter(symbol == "MGM") %>%
+  autoplot(color = 'red') + 
+  labs(title = "STL Decomposition of MGM Volume", 
+       x = "Trading Day") + theme_minimal()
+```
+
+### MGM Adjusted Stock Price Decomposition
+```{r}
+components(dcmpAdj) %>% 
+  filter(symbol == "MGM") %>% 
+  autoplot(color = 'red') + 
+  labs(title = "STL Decomposition of MGM Adjusted Price", 
+       x = "Trading Day") + theme_minimal()
+
+```
+
+## FanDuel Decomposition
+### Fanduel Volume Decomposition
+```{r}
+components(dcmpVol) %>% 
+  filter(symbol == "PDYPY") %>% 
+  autoplot(color = '#0072B2') + 
+  labs(title = "STL Decomposition of FanDuel Volume", 
+       x = "Trading Day") + theme_minimal()
+```
+
+### Fanduel Adjusted Stock Price Decomposition
+```{r}
+components(dcmpAdj) %>% 
+  filter(symbol == "PDYPY") %>% 
+  autoplot(color = '#0072B2') + 
+  labs(title = "STL Decomposition of FanDuel Adjusted Price", 
+       x = "Trading Day") + theme_minimal()
+```
+
+## DraftKings Decomposition
+### DraftKings Volume Decomposition
+```{r}
+components(dcmpVol) %>% 
+  filter(symbol == "DKNG") %>% 
+  autoplot() + 
+  labs(title = "STL Decomposition of DraftKings Volume", 
+       x = "Trading Day") + theme_minimal()
+```
+
+### DraftKings Adjusted Stock Price Decomposition
+```{r}
+components(dcmpAdj) %>% 
+  filter(symbol == "DKNG") %>% 
+  autoplot() +
+  labs(title = "STL Decomposition of DraftKings Adjusted Price",
+       x = "Trading Day") + theme_minimal()
+
+```
+
+
+
+# Modeling function
+```{r}
+# Function
+fc.model <- function(data, Outcome) {
+  
+	Outcome <- ensym(Outcome)
+	
+fits <- data %>% model(
+	ARIMA = ARIMA(log(!!Outcome + 0.1)), 
+	ARIMAD1 = ARIMA(log(!!Outcome + 0.1) ~ pdq(d=1)),
+	ETS = ETS(log(!!Outcome + 0.1))) %>% # one way of fixing log issue
+	mutate(Combo = (ARIMA + ETS)/2)
+return(fits)
+}
+
+
+
+```
+
+## Model fit and Report
+```{r}
+# Fit the Models
+fit <- train %>% 
+  fc.model(., Outcome = volume)
+
+# ALL ARIMA reports
+fit %>% select(ARIMA) %>% report()
+```
+
+### ARIMA with 1 Differencing Report
+```{r}
+fit %>% select(ARIMAD1) %>% report()
+```
+### ETS Report
+```{r}
+fit %>% select(ETS) %>% report()
+```
+### Combo Reports
+```{r}
+# Looking at each Combo report
+fit %>% filter(symbol == "CZR") %>% select(Combo) %>% report()
+fit %>% filter(symbol == "PENN") %>% select(Combo) %>% report()
+fit %>% filter(symbol == "MGM") %>% select(Combo) %>% report()
+fit %>% filter(symbol == "DKNG") %>% select(Combo) %>% report()
+fit %>% filter(symbol == "PDYPY") %>% select(Combo) %>% report()
+
+```
+
+
+# Model Selection
+## Models for CZR
+```{r}
+# Choosing model for CZR
+fit %>% 
+  filter(symbol == "CZR") %>% 
+  accuracy() %>% 
+  arrange(RMSE)
+```
+
+## Comparing CZR Models
+### CZR ARIMA
+```{r}
+fit %>% 
+  select(ARIMA) %>% 
+  filter(symbol == "CZR") %>% 
+  forecast(h = 14) %>% 
+  autoplot() +
+  autolayer(Model.Me %>% 
+              filter(symbol == "CZR") %>% 
+              select(volume)) + 
+  xlim(400,780) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume", 
+       title = "Forecasting CZR Trading Volume", 
+       subtitle = "ARIMA: Forecasting 14 Days") + theme_minimal()
+
+## Checking Residuals
+fit %>% 
+  select(ARIMA) %>% 
+  filter(symbol == "CZR") %>%
+  gg_tsresiduals()
+```
+
+### CZR Combo
+```{r}
+fit %>% 
+  select(Combo) %>% 
+  filter(symbol == "CZR") %>% 
+  forecast(h = 14) %>% 
+  autoplot() +
+  autolayer(Model.Me %>% 
+              filter(symbol == "CZR") %>% 
+              select(volume)) + 
+  ylim(0,2.5e+07) + 
+  xlim(400,780) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume", 
+       title = "Forecasting CZR Trading Volume", 
+       subtitle = "ETS + ARIMA: Forecasting 14 Days") + theme_minimal()
+
+## Checking Residuals
+fit %>% 
+  filter(symbol == "CZR") %>% 
+  select(Combo) %>%
+  gg_tsresiduals()
+```
+
+### CZR Other Models
+```{r}
+# Other Models (ARIMAD1)
+fit %>% 
+  select(ARIMAD1) %>%
+  filter(symbol == "CZR") %>% 
+  gg_tsresiduals()
+
+# Other Models (ETS)
+fit %>% 
+  select(ETS) %>% 
+  filter(symbol == "CZR") %>% 
+  gg_tsresiduals()
+```
+
+* Residuals are pretty crazy for both, comparing the two models (ARIMA and Combo (ARIMA + ETS))
+  + Not normally distributed (outliers)
+  + For ARIMA the acf looks more like white noise with one lag outside of the bounds
+  + While Combo has multiple lags outside the bounds
+
+## Models for MGM
+```{r}
+# Choosing model for MGM
+fit %>% 
+  filter(symbol == "MGM") %>%
+  accuracy() %>% 
+  arrange(RMSE)
+```
+
+## Comparing MGM Models
+### MGM ARIMA Model
+```{r}
+fit %>% 
+  select(ARIMA) %>% 
+  filter(symbol == "MGM") %>% 
+  forecast(h = 14) %>% 
+  autoplot() +
+  autolayer(Model.Me %>% 
+              filter(symbol == "MGM") %>% 
+              select(volume)) + 
+  xlim(400,780) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume", 
+       title = "Forecasting MGM Trading Volume", 
+       subtitle = "ARIMA: Forecasting 14 Days") + theme_minimal()
+
+## Checking Residuals
+fit %>% 
+  select(ARIMA) %>% 
+  filter(symbol == "MGM") %>% 
+  gg_tsresiduals() + 
+  labs(title = "ARIMA Model Fit")
+```
+
+### MGM Combo Model
+```{r}
+fit %>% 
+  select(Combo) %>% 
+  filter(symbol == "MGM") %>% 
+  forecast(h = 14) %>% 
+  autoplot() +   
+  autolayer(Model.Me %>% 
+              filter(symbol == "MGM") %>% 
+              select(volume)) + 
+  xlim(400,780) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume", 
+       title = "Forecasting MGM Trading Volume", 
+       subtitle = "ETS + ARIMA: Forecasting 14 Days") + theme_minimal()
+
+## Checking Residuals
+fit %>% 
+  filter(symbol == "MGM") %>% 
+  select(Combo) %>% 
+  gg_tsresiduals() + 
+  labs(title = "ETS + ARIMA Model Fit")
+```
+
+
+### MGM Other Models
+```{r}
+# ARIMA-D1 Model
+fit %>% 
+  select(ARIMAD1) %>% 
+  filter(symbol == "MGM") %>% 
+  gg_tsresiduals() + 
+  labs(title = "ARIMA-D1 Model Fit")
+
+# ETS Model
+fit %>% 
+  select(ETS) %>% 
+  filter(symbol == "MGM") %>% 
+  gg_tsresiduals() + 
+  labs(title = "ETS Model Fit")
+```
+
+## Models for PENN
+```{r}
+# Choosing model for PENN
+fit %>% 
+  filter(symbol == "PENN") %>% 
+  accuracy() %>% 
+  arrange(RMSE)
+```
+
+## Comparing PENN Models
+### PENN ARIMA Model
+```{r}
+fit %>% 
+  select(ARIMA) %>% 
+  filter(symbol == "PENN") %>% 
+  forecast(h = 14) %>% 
+  autoplot() +   
+  autolayer(Model.Me %>% 
+              filter(symbol == "PENN") %>% 
+              select(volume)) + 
+  xlim(400,780) +
+  labs(x = "Trading Days",
+       y = "Trade Volume", 
+       title = "Forecasting PENN Trading Volume", 
+       subtitle = "ARIMA: Forecasting 14 Days") + theme_minimal()
+
+## Checking Residuals
+fit %>% 
+  select(ARIMA) %>% 
+  filter(symbol == "PENN") %>% 
+  gg_tsresiduals() + 
+  labs(title = "ARIMA Model Fit")
+```
+
+### PENN Combo Model
+```{r}
+fit %>% 
+  select(Combo) %>% 
+  filter(symbol == "PENN") %>% 
+  forecast(h = 14) %>% 
+  autoplot() +  
+  autolayer(Model.Me %>% 
+              filter(symbol == "PENN") %>% 
+              select(volume)) + 
+  xlim(400,780) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume", 
+       title = "Forecasting PENN Trading Volume", 
+       subtitle = "ETS + ARIMA: Forecasting 14 Days") + theme_minimal()
+
+## Checking Residuals
+fit %>% filter(symbol == "PENN") %>% 
+  select(Combo) %>% 
+  gg_tsresiduals() + 
+  labs(title ="ETS + ARIMA Model Fit")
+```
+
+### PENN Other Models
+```{r}
+fit %>% 
+  select(ARIMAD1) %>% 
+  filter(symbol == "PENN") %>% 
+  gg_tsresiduals() + 
+  labs(title="ARIMA-D1 Model Fit")
+
+fit %>% 
+  select(ETS) %>% 
+  filter(symbol == "PENN") %>% 
+  gg_tsresiduals() + 
+  labs(title = "ETS Model Fit")
+
+```
+
+## Models for PDYPY
+```{r}
+# Choosing model for PDYPY
+fit %>% 
+  filter(symbol == "PDYPY") %>% 
+  accuracy() %>% 
+  arrange(RMSE)
+```
+
+## Comparing PDYPY Models
+### PDYPY ARIMA Model
+```{r}
+fit %>% 
+  select(ARIMA) %>% 
+  filter(symbol == "PDYPY") %>% 
+  forecast(h = 14) %>% 
+  autoplot() +   
+  autolayer(Model.Me %>% 
+              filter(symbol == "PDYPY") %>% 
+              select(volume)) + 
+  xlim(625,780) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume", 
+       title = "Forecasting FanDuel Trading Volume", 
+       subtitle = "ARIMA: Forecasting 14 Days") + theme_minimal()
+
+## Checking Residuals
+fit %>% 
+  select(ARIMA) %>% 
+  filter(symbol == "PDYPY") %>% 
+  gg_tsresiduals() + 
+  labs(title = "ARIMA Model Fit")
+```
+
+### PDYPY Combo Model
+```{r}
+fit %>% 
+  select(Combo) %>% 
+  filter(symbol == "PDYPY") %>% 
+  forecast(h = 14) %>% 
+  autoplot() +   
+  autolayer(Model.Me %>% 
+              filter(symbol == "PDYPY") %>% 
+              select(volume)) + 
+  xlim(625,780) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume", 
+       title = "Forecasting FanDuel Trading Volume", 
+       subtitle = "ETS + ARIMA: Forecasting 14 Days") + theme_minimal()
+
+
+
+## Checking Residuals
+fit %>% 
+  filter(symbol == "PDYPY") %>% 
+  select(Combo) %>% 
+  gg_tsresiduals() + 
+  labs(title = "ETS + ARIMA Model Fit")
+```
+
+### PDYPY Other Models
+```{r}
+# ARIMA-D1 Model
+fit %>% 
+  select(ARIMAD1) %>% 
+  filter(symbol == "PDYPY") %>% 
+  gg_tsresiduals() + 
+  labs(title = "ARIMA-D1 Model Fit")
+
+# ETS Model
+fit %>% 
+  select(ETS) %>% 
+  filter(symbol == "PDYPY") %>% 
+  gg_tsresiduals() +
+  labs(title = "ETS Model Fit")
+```
+
+
+## Models for DKNG
+```{r}
+# Choosing model for DKNG
+fit %>% 
+  filter(symbol == "DKNG") %>% 
+  accuracy() %>% 
+  arrange(RMSE)
+```
+
+## Comparing DKNG Models
+### DKNG ARIMA
+```{r}
+fit %>% 
+  select(ARIMA) %>% 
+  filter(symbol == "DKNG") %>% 
+  forecast(h = 14) %>% 
+  autoplot() + 
+  autolayer(Model.Me %>% 
+              filter(symbol == "DKNG") %>% 
+              select(volume)) + 
+  xlim(500,780) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume", 
+       title = "Forecasting DraftKings Trading Volume", 
+       subtitle = "ARIMA: Forecasting 14 Days") + theme_minimal()
+
+## Checking Residuals
+fit %>% 
+  select(ARIMA) %>% 
+  filter(symbol == "DKNG") %>% 
+  gg_tsresiduals() +
+  labs(title = "ARIMA Model Fit")
+```
+
+### DKNG Combo Model
+```{r}
+fit %>% 
+  select(Combo) %>% 
+  filter(symbol == "DKNG") %>% 
+  forecast(h = 14) %>% 
+  autoplot() +
+    autolayer(Model.Me %>% 
+                filter(symbol == "DKNG") %>% 
+                select(volume)) + 
+xlim(500,780) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume", 
+       title = "Forecasting DraftKings Trading Volume", 
+       subtitle = "ETS + ARIMA: Forecasting 14 Days") + theme_minimal()
+
+## Checking Residuals
+fit %>% 
+  filter(symbol == "DKNG") %>% 
+  select(Combo) %>% 
+  gg_tsresiduals() + 
+  labs(title = "ETS + ARIMA Model Fit")
+```
+
+
+### DKNG Other Models
+```{r}
+fit %>% 
+  select(ARIMAD1) %>% 
+  filter(symbol == "DKNG") %>% 
+  gg_tsresiduals() +
+  labs(title = "ARIMA-D1 Model Fit")
+
+fit %>% 
+  select(ETS) %>% 
+  filter(symbol == "DKNG") %>% 
+  gg_tsresiduals() + 
+  labs(title = "ETS Model Fit")
+
+```
+
+
+# Best Model Fits
+```{r}
+# Create fctest forecasting 14 periods out
+## Looking at the accuracy in our test data arranged by RMSE
+fctest <- fit %>% 
+  forecast(h = 14) %>% 
+  accuracy(test) %>% 
+  arrange(RMSE) %>% 
+  group_by(symbol) %>% 
+  slice_min(RMSE, 
+            n = 1, 
+            with_ties = F)
+
+# Best models for each Symbol
+fctest
+
+
+# Creating Model.Table  based on the fit
+model.table <- 1:5 %>% 
+  sapply(function(x) fit %>% 
+           filter(symbol == fctest$symbol[[x]]) %>% select(fctest$.model[[x]]))
+
+
+model.table
+```
+
+
+# Forecasting Test Data
+```{r}
+# Creating a forecast for each
+testfit <- test %>% 
+  fc.model(., Outcome = volume)
+
+testfit
+```
+
+## CZR Forecasts and Plot
+```{r}
+# For CZR, ETS was best model
+CZR_best <- testfit %>% 
+  filter(symbol == "CZR") %>% 
+  forecast(h=14)
+
+## Plotting the best model for CZR
+CZR_best %>% 
+  filter(.model == "ETS") %>% 
+  autoplot() + 
+  autolayer(Model.Me %>% 
+              filter(symbol == "CZR") %>% 
+              select(volume)) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume (Log)", 
+       title = "Forecasting CZR Trading Volume", 
+       subtitle = "Best Model - ETS: Forecasting 14 Days") + theme_minimal()
+```
+
+## DKNG Forecasts and Plot
+```{r}
+# For DKNG, ETS was best model
+DKNG_best <- testfit %>% 
+  filter(symbol == "DKNG") %>% 
+  forecast(h=14)
+
+# Plotting the best model for DKNG
+DKNG_best %>% 
+  filter(.model == "ETS") %>% 
+  autoplot() + 
+  autolayer(Model.Me %>% 
+              filter(symbol == "DKNG") %>% 
+              select(volume)) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume (Log)", 
+       title = "Forecasting DraftKings Trading Volume", 
+       subtitle = "Best Model - ETS: Forecasting 14 Days") + theme_minimal()
+```
+
+## MGM Forecasts and Plot
+```{r}
+# For MGM, ARIMA was best model
+MGM_best <- testfit %>% 
+  filter(symbol == "MGM") %>% 
+  forecast(h=14)
+
+# Plotting the best model for MGM
+MGM_best %>% 
+  filter(.model == "ARIMA") %>% 
+  autoplot() + 
+  autolayer(Model.Me %>% 
+              filter(symbol == "MGM") %>% 
+              select(volume)) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume (Log)", 
+       title = "Forecasting MGM Trading Volume", 
+       subtitle = "Best Model - ARIMA: Forecasting 14 Days") + theme_minimal()
+```
+
+## FanDuel Forecasts and Plot
+```{r}
+# For fanDuel, ETS was best model
+fanDuel_best <- testfit %>% 
+  filter(symbol == "PDYPY") %>% 
+  forecast(h=14)
+
+# Plotting the best model for PDYPY
+fanDuel_best %>% 
+  filter(.model == "ETS") %>% 
+  autoplot() + 
+  autolayer(Model.Me %>% 
+              filter(symbol == "PDYPY") %>% 
+              select(volume)) +
+  labs(x = "Trading Days",
+       y = "Trade Volume (Log)", 
+       title = "Forecasting FanDuel Trading Volume", 
+       subtitle = "Best Model - ETS: Forecasting 14 Days") + theme_minimal()
+```
+
+
+## PENN Forecasts and Plot
+```{r}
+# For PENN, ETS was best model
+PENN_best <- testfit %>% 
+  filter(symbol == "PENN") %>% 
+  forecast(h=14)
+
+# Plotting the best model for PENN
+PENN_best %>% 
+  filter(.model == "ETS") %>% 
+  autoplot() + 
+  autolayer(Model.Me %>% 
+              filter(symbol == "PENN") %>% 
+              select(volume)) +
+  labs(x = "Trading Days", 
+       y = "Trade Volume (Log)", 
+       title = "Forecasting PENN Trading Volume", 
+       subtitle = "Best Model - ETS: Forecasting 14 Days") + theme_minimal()
+
+```
+
+
+
+
+# Model Proofing
+## Different way to look at accuracy 
+```{r}
+testfit <- fc.model(train, Outcome = volume) %>% forecast(h=14)
+
+testfit  
+```
+
+### CZR Accuracy 
+```{r}
+accuracy(testfit,test) %>% filter(symbol == "CZR") # ETS
+```
+
+### PENN Accuracy
+```{r}
+accuracy(testfit,test) %>% filter(symbol == "PENN") # ETS
+```
+
+### MGM Accuracy
+```{r}
+accuracy(testfit,test) %>% filter(symbol == "MGM") # ARIMA
+```
+
+### PDYPY Accuracy
+```{r}
+accuracy(testfit,test) %>% filter(symbol == "PDYPY") # ETS
+```
+
+### DKNG Accuracy
+```{r}
+accuracy(testfit,test) %>% filter(symbol == "DKNG") # ETS
+```
+
+

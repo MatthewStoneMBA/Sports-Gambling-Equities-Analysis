@@ -26,6 +26,35 @@ cPal <- c("#009E73", "black", "red", "#0072B2", "#D55E00")
 ```
 
 
+## DraftKings
+### Ticker - DKNG
+```{r, cache=TRUE}
+# Pull DraftKings Data
+draftK <- c("DKNG") %>% 
+  tq_get(., from = "2015-01-01") %>%
+  as_tsibble(., 
+             index = date) 
+# DraftKings Adjusted close price
+draftK %>% autoplot(adjusted) + 
+  labs(
+    title = "DraftKings Adjusted Price", 
+    y = "Adjusted Stock Price ($)", 
+    x = "Year (1D)", 
+    subtitle = "    ") +  theme_minimal()
+# DraftKings Volume 
+draftK %>% 
+  autoplot(volume) + 
+  labs(
+    title = "DraftKings Volume", 
+    y = "Trade Volume", 
+    x = "Year (1D)", 
+    subtitle = "   ") + theme_minimal()
+# Most recent day
+draftK %>% 
+  tail(1)
+```
+
+
 ```markdown
 Syntax highlighted code block
 

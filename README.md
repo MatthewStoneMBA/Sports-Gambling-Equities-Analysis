@@ -10,6 +10,22 @@ Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://j
 
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(tidyquant)
+library(fpp3)
+library(wesanderson)
+library(distributional)
+library(rmdformats)
+# Creating Color palette
+cPal <- c("#009E73", "black", "red", "#0072B2", "#D55E00")
+
+
+```
+
+
 ```markdown
 Syntax highlighted code block
 

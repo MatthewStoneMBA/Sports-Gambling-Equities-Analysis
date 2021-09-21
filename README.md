@@ -1,5 +1,7 @@
 ## Welcome to GitHub Pages
 
+
+practicing my git fetch
 Adjustments
 
 You can use the [editor on GitHub](https://github.com/MatthewStoneMBA/Sports-Gambling-Equities-Analysis/edit/main/README.md) to maintain and preview the content for your website in Markdown files.

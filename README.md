@@ -1,6 +1,11 @@
 ## Welcome to GitHub Pages
 
 
+In May 2018, the Supreme Court voted to get rid of the Amateur Sports Protection act of 1992 (Hyperlink), and to allow the state to make the decision whether or not to allow sports gambling. Since then, more than 2 dozen states (hyperlink) have decided to legalize it. Although many of them only allow in-person betting, there has been traction in online betting. This is where I found interest in this topic, as many major players in the gambling industry have decided to develop their own platforms for online sports betting. Major players including DraftKings, MGM Resorts, Caesars Entertainment, Barstool (Penn National Gaming) and FanDuel (Flutter Entertainment). 
+
+Having access to equities data with the R package TidyQuant (hyperlink), I wanted to analyze each of these major stocks -- specifically the trading volume of each stock, compare and create a forecast of what the volume will look like in two weeks.In my analysis I conducted EDA, identifying seasonality and trends with Decomposition (Utilizing the fpp3 package (hyperlink)), and wrote a function that identifies the best fitting model for each of the individual stocks. The best fitting models were ARIMA (Autoregressive Integrated Moving Average) and ETS (Exponential Smoothing) for individual stocks. When comparing the stocks, DraftKings and MGM Resorts had the highest forecasted trade volume, while FanDuel and CZR Entertainment had the lowest trading volume.
+
+
 practicing my git fetch
 Adjustments
 

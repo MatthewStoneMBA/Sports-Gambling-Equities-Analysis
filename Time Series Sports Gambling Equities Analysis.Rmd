@@ -1,57 +1,26 @@
 ---
 title: "Sports Gambling Equity Forecast and Analysis"
 author: "Matthew M. Stone"
-date: "May 2nd, 2021"
+date: "`r Sys.Date()`"
 output: 
-  html_document:
-    theme: downcute_theme
+  rmdformats::downcute:
     self_contained: true
-    code_folding: hide
     thumbnails: false
+    code_folding: hide
     lightbox: true
+    highlight: tango
   
 ---
 
-```{r}
-downcute(
-  fig_width = 8,
-  fig_height = 5,
-  fig_caption = TRUE,
-  lightbox = FALSE,
-  thumbnails = FALSE,
-  gallery = FALSE,
-  toc_depth = 2,
-  embed_fonts = TRUE,
-  use_bookdown = FALSE,
-  pandoc_args = NULL,
-  md_extensions = NULL,
-  mathjax = "rmdformats",
-  highlight = NULL,
-  default_style = c("light", "dark"),
-  downcute_theme = c("default", "chaos"),
-  ...
-)
-```
+In May 2018, the Supreme Court voted to get rid of the Amateur Sports Protection act of 1992 (Hyperlink), and to allow the state to make the decision whether or not to allow sports gambling. Since then, more than 2 dozen states (hyperlink) have decided to legalize it. Although many of them only allow in-person betting, there has been traction in online betting. This is where I found interest in this topic, as many major players in the gambling industry have decided to develop their own platforms for online sports betting. Major players including DraftKings, MGM Resorts, Caesars Entertainment, Barstool (Penn National Gaming) and FanDuel (Flutter Entertainment). 
 
-# Add to headers to have dropdowns {.tabset .tabset-fade .tabset-pills} 
+Having access to equities data with the R package TidyQuant (hyperlink), I wanted to analyze each of these major stocks -- specifically the trading volume of each stock, compare and create a forecast of what the volume will look like in two weeks.In my analysis I conducted EDA, identifying seasonality and trends with Decomposition (Utilizing the fpp3 package (hyperlink)), and wrote a function that identifies the best fitting model for each of the individual stocks. The best fitting models were ARIMA (Autoregressive Integrated Moving Average) and ETS (Exponential Smoothing) for individual stocks. When comparing the stocks, DraftKings and MGM Resorts had the highest forecasted trade volume, while FanDuel and CZR Entertainment had the lowest trading volume.
 
+# Setup & Packages
 ```{r setup, message=FALSE, warning=FALSE}
-library(knitr)
 
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-
-## Global options
-options(max.print="75")
-opts_chunk$set(cache=TRUE,
-               prompt=FALSE,
-               tidy=TRUE,
-               comment=NA,
-               message=FALSE,
-               warning=FALSE)
-opts_knit$set(width=75)
-```
 # Packages
-```{r}
+library(knitr)
 library(tidyverse)
 library(lubridate)
 library(tidyquant)
@@ -60,10 +29,43 @@ library(wesanderson)
 library(distributional)
 library(rmdformats)
 
+# Global options
+options(max.print="75")
+opts_chunk$set(cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+
+# Downcute Setup
+
+#downcute(
+  #fig_width = 8,
+  #fig_height = 5,
+  #fig_caption = TRUE,
+  #lightbox = FALSE,
+  #thumbnails = FALSE,
+  #gallery = FALSE,
+  #toc_depth = 2,
+  #embed_fonts = TRUE,
+  #use_bookdown = FALSE,
+  #pandoc_args = NULL,
+  #md_extensions = NULL,
+  #mathjax = "rmdformats",
+  #highlight = NULL,
+#  default_style = c("light", "dark"),
+#  downcute_theme = c("default", "chaos")
+#)
+
+
 
 # Creating Color palette
 cPal <- c("#009E73", "black", "red", "#0072B2", "#D55E00")
 ```
+
+
 
 
 # Exploratory Data Analysis

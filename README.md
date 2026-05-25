@@ -1,4 +1,4 @@
-# Sports Gambling Equities Analysis
+# Sports Gambling Analysis
 
 A time series analysis and 2-week trading volume forecast for major sports gambling stocks, built in R. Published following the Supreme Court ruling in May 2018 that opened the door for state-level sports betting legalization.
 
